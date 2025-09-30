@@ -60,6 +60,7 @@ export default function PlaylistPage() {
     total: number;
     percentage: number;
   } | null>(null);
+  const [discogsComplete, setDiscogsComplete] = useState(false);
   const [expandedTrackId, setExpandedTrackId] = useState<string | null>(null);
 
   // Filter states
@@ -101,6 +102,7 @@ export default function PlaylistPage() {
           setLoadingStatus('');
           setLoadingProgress(null);
           setIsRefreshing(false);
+          setDiscogsComplete(true);
           eventSource.close();
         } else if (data.type === 'error') {
           setError(data.message);
@@ -126,6 +128,7 @@ export default function PlaylistPage() {
   const handleRefresh = () => {
     setIsRefreshing(true);
     setError('');
+    setDiscogsComplete(false);
     clearFilters();
     fetchPlaylistTracks();
   };
@@ -152,6 +155,78 @@ export default function PlaylistPage() {
 
   const totalDuration = tracks.reduce((acc, track) => acc + track.duration, 0);
 
+  // Helper to escape CSV values
+  const escapeCSV = (str: string): string => {
+    return str.replace(/"/g, '""');
+  };
+
+  // Export playlist to CSV
+  const exportToCSV = () => {
+    // CSV headers
+    const headers = [
+      'Track #', 'Track Name', 'Artists', 'Album', 'Duration',
+      'Spotify URL', 'Added At',
+      'Discogs Found', 'Discogs Title', 'Year', 'Country',
+      'Genres', 'Styles', 'Labels', 'Formats', 'Discogs URL'
+    ];
+
+    // Build CSV rows
+    const rows = tracks.map((track, index) => {
+      const duration = formatDuration(track.duration);
+      const discogs = track.discogs;
+
+      // Format arrays as semicolon-separated
+      const genres = discogs?.found && discogs.genres ? discogs.genres.join('; ') : '';
+      const styles = discogs?.found && discogs.styles ? discogs.styles.join('; ') : '';
+      const labels = discogs?.found && discogs.labels ? discogs.labels.join('; ') : '';
+      const formats = discogs?.found && discogs.formats
+        ? (Array.isArray(discogs.formats)
+            ? discogs.formats.join('; ')
+            : discogs.formats)
+        : '';
+
+      return [
+        index + 1,
+        escapeCSV(track.name),
+        escapeCSV(track.artists),
+        escapeCSV(track.album),
+        duration,
+        track.externalUrl,
+        new Date(track.addedAt).toLocaleDateString(),
+        discogs?.found ? 'Yes' : 'No',
+        discogs?.found ? escapeCSV(discogs.title || '') : '',
+        discogs?.year || '',
+        discogs?.country || '',
+        genres,
+        styles,
+        labels,
+        formats,
+        discogs?.uri ? `https://www.discogs.com${discogs.uri}` : '',
+      ].map(val => `"${val}"`).join(',');
+    });
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.map(h => `"${h}"`).join(','),
+      ...rows
+    ].join('\n');
+
+    // Create and trigger download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    const filename = `${playlist?.name.replace(/[^a-z0-9]/gi, '_') || 'playlist'}_discogs.csv`;
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // Get all unique genres and styles from tracks
   const allGenres = Array.from(
     new Set(
@@ -168,6 +243,26 @@ export default function PlaylistPage() {
         .flatMap((t) => t.discogs!.styles || [])
     )
   ).sort();
+
+  // Count tracks per genre
+  const genreCounts = tracks.reduce((acc, track) => {
+    if (track.discogs?.found && track.discogs.genres) {
+      track.discogs.genres.forEach(genre => {
+        acc[genre] = (acc[genre] || 0) + 1;
+      });
+    }
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Count tracks per style
+  const styleCounts = tracks.reduce((acc, track) => {
+    if (track.discogs?.found && track.discogs.styles) {
+      track.discogs.styles.forEach(style => {
+        acc[style] = (acc[style] || 0) + 1;
+      });
+    }
+    return acc;
+  }, {} as Record<string, number>);
 
   // Filter tracks based on selected filters
   const filteredTracks = tracks.filter((track) => {
@@ -436,7 +531,7 @@ export default function PlaylistPage() {
                           : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800'
                       }`}
                     >
-                      {genre}
+                      {genre} <span className="opacity-70">({genreCounts[genre] || 0})</span>
                     </button>
                   ))}
                 </div>
@@ -460,7 +555,7 @@ export default function PlaylistPage() {
                           : 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 hover:bg-purple-200 dark:hover:bg-purple-800'
                       }`}
                     >
-                      {style}
+                      {style} <span className="opacity-70">({styleCounts[style] || 0})</span>
                     </button>
                   ))}
                 </div>
@@ -470,9 +565,22 @@ export default function PlaylistPage() {
         )}
 
         <div>
-          <h2 className="text-2xl font-semibold mb-4">
-            Tracks ({filteredTracks.length} / {tracks.length})
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-2xl font-semibold">
+              Tracks ({filteredTracks.length} / {tracks.length})
+            </h2>
+
+            {discogsComplete && tracks.length > 0 && (
+              <button
+                onClick={exportToCSV}
+                className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2 shadow-md"
+                title="Export playlist with Discogs data to CSV"
+              >
+                <span>📥</span>
+                Export to CSV
+              </button>
+            )}
+          </div>
 
           {/* Real-time Discogs fetch progress */}
           {!loading && loadingStatus && loadingProgress && (
