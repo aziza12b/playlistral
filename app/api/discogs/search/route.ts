@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const searchQuery = `${artist} ${track}${album ? ` ${album}` : ''}`;
     const searchUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(
       searchQuery
-    )}&type=release&per_page=5`;
+    )}&type=release&per_page=1`;
 
     let searchResponse = await fetch(searchUrl, {
       headers: {

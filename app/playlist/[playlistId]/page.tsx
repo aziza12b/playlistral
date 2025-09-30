@@ -53,6 +53,13 @@ export default function PlaylistPage() {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState('');
+  const [loadingProgress, setLoadingProgress] = useState<{
+    current: number;
+    total: number;
+    percentage: number;
+  } | null>(null);
   const [expandedTrackId, setExpandedTrackId] = useState<string | null>(null);
 
   // Filter states
@@ -64,25 +71,66 @@ export default function PlaylistPage() {
     max: null,
   });
 
-  useEffect(() => {
-    const fetchPlaylistTracks = async () => {
-      try {
-        const response = await fetch(`/api/spotify/playlist/${playlistId}`);
-        const data = await response.json();
+  const fetchPlaylistTracks = async () => {
+    try {
+      setLoadingStatus('Connecting to Spotify...');
 
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to fetch playlist tracks');
+      const eventSource = new EventSource(`/api/spotify/playlist/${playlistId}/stream`);
+
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        if (data.type === 'status') {
+          setLoadingStatus(data.message);
+          if (data.progress) {
+            setLoadingProgress(data.progress);
+          }
+        } else if (data.type === 'playlist') {
+          setPlaylist(data.playlist);
+          setTracks(data.tracks);
+          setLoading(false);
+        } else if (data.type === 'track_update') {
+          setTracks((prevTracks) =>
+            prevTracks.map((track) =>
+              track.id === data.trackId
+                ? { ...track, discogs: data.discogs }
+                : track
+            )
+          );
+        } else if (data.type === 'complete') {
+          setLoadingStatus('');
+          setLoadingProgress(null);
+          setIsRefreshing(false);
+          eventSource.close();
+        } else if (data.type === 'error') {
+          setError(data.message);
+          setLoading(false);
+          setIsRefreshing(false);
+          eventSource.close();
         }
+      };
 
-        setPlaylist(data.playlist);
-        setTracks(data.tracks);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
+      eventSource.onerror = () => {
+        setError('Connection to server lost');
         setLoading(false);
-      }
-    };
+        setIsRefreshing(false);
+        eventSource.close();
+      };
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setError('');
+    clearFilters();
+    fetchPlaylistTracks();
+  };
+
+  useEffect(() => {
     fetchPlaylistTracks();
   }, [playlistId]);
 
@@ -91,6 +139,18 @@ export default function PlaylistPage() {
     const seconds = Math.floor((ms % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
+
+  const formatTotalDuration = (totalMs: number) => {
+    const hours = Math.floor(totalMs / 3600000);
+    const minutes = Math.floor((totalMs % 3600000) / 60000);
+
+    if (hours > 0) {
+      return `${hours} hr ${minutes} min`;
+    }
+    return `${minutes} min`;
+  };
+
+  const totalDuration = tracks.reduce((acc, track) => acc + track.duration, 0);
 
   // Get all unique genres and styles from tracks
   const allGenres = Array.from(
@@ -181,7 +241,24 @@ export default function PlaylistPage() {
     return (
       <div className="font-sans min-h-screen p-8 pb-20">
         <main className="max-w-6xl mx-auto">
-          <p className="text-center text-gray-500">Loading playlist...</p>
+          <div className="text-center">
+            <p className="text-gray-700 dark:text-gray-300 text-lg mb-2">
+              {loadingStatus || 'Loading playlist...'}
+            </p>
+            {loadingProgress && (
+              <div className="mt-4">
+                <div className="w-full max-w-md mx-auto bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-2">
+                  <div
+                    className="bg-blue-500 h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${loadingProgress.percentage}%` }}
+                  ></div>
+                </div>
+                <p className="text-sm text-gray-500">
+                  {loadingProgress.current} / {loadingProgress.total} tracks ({loadingProgress.percentage}%)
+                </p>
+              </div>
+            )}
+          </div>
         </main>
       </div>
     );
@@ -228,20 +305,54 @@ export default function PlaylistPage() {
                 />
               )}
               <div className="flex-1">
-                <h1 className="text-4xl font-bold mb-2">{playlist.name}</h1>
-                <p className="text-gray-600 dark:text-gray-400 mb-2">
-                  by {playlist.owner}
-                </p>
-                {playlist.description && (
-                  <p className="text-gray-600 dark:text-gray-400 mb-2">
-                    {playlist.description}
-                  </p>
-                )}
-                <p className="text-sm text-gray-500 dark:text-gray-500">
-                  {playlist.totalTracks} tracks
-                </p>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h1 className="text-4xl font-bold mb-2">{playlist.name}</h1>
+                    <p className="text-gray-600 dark:text-gray-400 mb-2">
+                      by {playlist.owner}
+                    </p>
+                    {playlist.description && (
+                      <p className="text-gray-600 dark:text-gray-400 mb-2">
+                        {playlist.description}
+                      </p>
+                    )}
+                    <p className="text-sm text-gray-500 dark:text-gray-500">
+                      {playlist.totalTracks} tracks • {formatTotalDuration(totalDuration)}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                  >
+                    <span className={isRefreshing ? 'animate-spin' : ''}>↻</span>
+                    {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* Loading status during refresh */}
+            {isRefreshing && loadingStatus && (
+              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">
+                  {loadingStatus}
+                </p>
+                {loadingProgress && (
+                  <div>
+                    <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-2 mb-1">
+                      <div
+                        className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${loadingProgress.percentage}%` }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">
+                      {loadingProgress.current} / {loadingProgress.total} tracks ({loadingProgress.percentage}%)
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
