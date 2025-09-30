@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Helper to add delay between requests
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 interface RouteParams {
   params: Promise<{
     playlistId: string;
@@ -71,12 +74,13 @@ export async function GET(
     };
 
     // Format tracks with general information
-    const tracks = playlistData.tracks.items.map((item: any, index: number) => {
+    const spotifyTracks = playlistData.tracks.items.map((item: any, index: number) => {
       const track = item.track;
       return {
         id: track.id,
         name: track.name,
         artists: track.artists.map((artist: any) => artist.name).join(', '),
+        artistsArray: track.artists.map((artist: any) => artist.name),
         album: track.album.name,
         duration: track.duration_ms,
         trackNumber: track.track_number,
@@ -86,9 +90,54 @@ export async function GET(
       };
     });
 
+    // Fetch Discogs data for each track sequentially with delays
+    const baseUrl = request.url.split('/api')[0];
+    const tracksWithDiscogs = [];
+
+    for (let i = 0; i < spotifyTracks.length; i++) {
+      const track = spotifyTracks[i];
+
+      try {
+        const discogsUrl = `${baseUrl}/api/discogs/search?artist=${encodeURIComponent(
+          track.artistsArray[0]
+        )}&track=${encodeURIComponent(track.name)}&album=${encodeURIComponent(
+          track.album
+        )}`;
+
+        const discogsResponse = await fetch(discogsUrl);
+
+        if (discogsResponse.ok) {
+          const discogsData = await discogsResponse.json();
+          const { artistsArray, ...trackWithoutArray } = track;
+          tracksWithDiscogs.push({
+            ...trackWithoutArray,
+            discogs: discogsData,
+          });
+        } else {
+          const { artistsArray, ...trackWithoutArray } = track;
+          tracksWithDiscogs.push({
+            ...trackWithoutArray,
+            discogs: { found: false },
+          });
+        }
+      } catch (error) {
+        console.error(`Failed to fetch Discogs data for track ${track.name}:`, error);
+        const { artistsArray, ...trackWithoutArray } = track;
+        tracksWithDiscogs.push({
+          ...trackWithoutArray,
+          discogs: { found: false },
+        });
+      }
+
+      // Add delay between requests (except for the last one)
+      if (i < spotifyTracks.length - 1) {
+        await delay(600); // 600ms delay = ~1.6 requests per second
+      }
+    }
+
     return NextResponse.json({
       playlist,
-      tracks,
+      tracks: tracksWithDiscogs,
     });
   } catch (error) {
     console.error('Spotify API error:', error);
