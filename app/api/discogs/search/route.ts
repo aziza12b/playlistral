@@ -55,11 +55,23 @@ export async function GET(request: NextRequest) {
     const cleanTrack = cleanSearchString(track);
     const cleanAlbum = album ? cleanSearchString(album) : '';
 
-    // Search Discogs for the track
-    const searchQuery = `${cleanArtist} ${cleanTrack}${cleanAlbum ? ` ${cleanAlbum}` : ''}`;
-    const searchUrl = `https://api.discogs.com/database/search?q=${encodeURIComponent(
-      searchQuery
-    )}&type=release&per_page=1`;
+    // Build query parameters using specific fields for better accuracy
+    const queryParams = new URLSearchParams({
+      type: 'release',
+      artist: cleanArtist,
+      track: cleanTrack,
+      per_page: '1',
+    });
+
+    // Add album/release title if available
+    if (cleanAlbum) {
+      queryParams.append('release_title', cleanAlbum);
+    }
+
+    const searchUrl = `https://api.discogs.com/database/search?${queryParams.toString()}`;
+
+    // log the search URL for debugging
+    console.log(`Searching Discogs with URL: ${searchUrl}`);
 
     let searchResponse = await fetch(searchUrl, {
       headers: {
@@ -70,7 +82,7 @@ export async function GET(request: NextRequest) {
 
     // Handle rate limiting with retry
     if (searchResponse.status === 429) {
-      console.log(`Rate limited when searching Discogs for: ${searchQuery}`);
+      console.log(`Rate limited when searching Discogs for: artist=${cleanArtist}, track=${cleanTrack}`);
       await delay(2500); // Wait 2.5 seconds
       searchResponse = await fetch(searchUrl, {
         headers: {
@@ -91,10 +103,38 @@ export async function GET(request: NextRequest) {
       throw new Error('Failed to search Discogs');
     }
 
-    const searchData = await searchResponse.json();
+    let searchData = await searchResponse.json();
+
+    // If no results found try without track query
+    if (searchData.results.length === 0 && cleanAlbum) {
+      console.log(`No results with track, retrying without track: artist=${cleanArtist}, album=${cleanAlbum}`);
+      const altQueryParams = new URLSearchParams({
+        type: 'release',
+        artist: cleanArtist,
+        release_title: cleanAlbum,
+        per_page: '1',
+      });
+      const altSearchUrl = `https://api.discogs.com/database/search?${altQueryParams.toString()}`;
+      console.log(`Retrying Discogs search with URL: ${altSearchUrl}`);
+      await delay(2000); // Wait 2 seconds before retry
+
+      searchResponse = await fetch(altSearchUrl, {
+        headers: {
+          'User-Agent': 'Playlistral/1.0',
+          'Authorization': `Discogs token=${discogsToken}`,
+        },
+      });
+
+      if (!searchResponse.ok) {
+        console.log(`Failed to search Discogs on retry: ${searchResponse.statusText}`);
+        throw new Error('Failed to search Discogs on retry');
+      }
+
+      searchData = await searchResponse.json();
+    }
 
     if (searchData.results.length === 0) {
-      console.log(`No Discogs match for: ${searchQuery}`);
+      console.log(`No Discogs match for: artist=${cleanArtist}, track=${cleanTrack}, album=${cleanAlbum}`);
       return NextResponse.json({
         found: false,
         message: 'No match found on Discogs',
