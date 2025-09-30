@@ -3,6 +3,33 @@ import { NextRequest } from 'next/server';
 // Helper to add delay between requests
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Helper to clean search strings for better Discogs matching
+const cleanSearchString = (str: string): string => {
+  return str
+    // Remove all content in parentheses
+    .replace(/\s*\([^)]*\)/g, '')
+    // Remove version suffixes: - Radio Edit, - Remix, etc.
+    .replace(/\s*-\s*(radio\s+edit|remix|extended\s+mix|club\s+mix|acoustic|live|remaster(ed)?|version|instrumental).*$/gi, '')
+    // Normalize non-English characters to ASCII
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+    .replace(/[^\x00-\x7F]/g, (char) => {
+      // Additional character mappings
+      const charMap: { [key: string]: string } = {
+        'ø': 'o', 'Ø': 'O',
+        'æ': 'ae', 'Æ': 'AE',
+        'œ': 'oe', 'Œ': 'OE',
+        'ß': 'ss',
+        'ð': 'd', 'Ð': 'D',
+        'þ': 'th', 'Þ': 'TH',
+      };
+      return charMap[char] || char;
+    })
+    // Clean up extra whitespace
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
 interface RouteParams {
   params: Promise<{
     playlistId: string;
@@ -133,10 +160,15 @@ export async function GET(
           });
 
           try {
+            // Clean track/artist/album names for better Discogs matching
+            const cleanArtist = cleanSearchString(track.artistsArray[0]);
+            const cleanTrack = cleanSearchString(track.name);
+            const cleanAlbum = cleanSearchString(track.album);
+
             const discogsUrl = `${baseUrl}/api/discogs/search?artist=${encodeURIComponent(
-              track.artistsArray[0]
-            )}&track=${encodeURIComponent(track.name)}&album=${encodeURIComponent(
-              track.album
+              cleanArtist
+            )}&track=${encodeURIComponent(cleanTrack)}&album=${encodeURIComponent(
+              cleanAlbum
             )}`;
 
             const discogsResponse = await fetch(discogsUrl);

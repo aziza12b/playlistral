@@ -474,6 +474,32 @@ export default function PlaylistPage() {
             Tracks ({filteredTracks.length} / {tracks.length})
           </h2>
 
+          {/* Real-time Discogs fetch progress */}
+          {!loading && loadingStatus && loadingProgress && (
+            <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-blue-600 dark:text-blue-400 animate-pulse">🔄</span>
+                <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                  Fetching Discogs data...
+                </p>
+              </div>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mb-2 ml-6">
+                Currently: <span className="font-semibold">{loadingStatus.replace('Getting Discogs data for ', '')}</span>
+              </p>
+              <div className="ml-6">
+                <div className="w-full bg-blue-200 dark:bg-blue-800 rounded-full h-1.5 mb-1">
+                  <div
+                    className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                    style={{ width: `${loadingProgress.percentage}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-blue-600 dark:text-blue-400">
+                  {loadingProgress.current} / {loadingProgress.total} tracks fetched ({loadingProgress.percentage}%)
+                </p>
+              </div>
+            </div>
+          )}
+
           {tracks.length === 0 ? (
             <p className="text-center text-gray-500 py-12">
               This playlist has no tracks
@@ -614,11 +640,7 @@ export default function PlaylistPage() {
                           {track.discogs.formats && track.discogs.formats.length > 0 && (
                             <div className="md:col-span-2">
                               <span className="text-gray-500">Formats:</span>{' '}
-                              <span className="font-medium">
-                                {track.discogs.formats.map(f =>
-                                  `${f.name}${f.descriptions.length > 0 ? ` (${f.descriptions.join(', ')})` : ''}`
-                                ).join(', ')}
-                              </span>
+                              <span className="font-medium">{track.discogs.formats.map(String).join(', ')}</span>
                             </div>
                           )}
                           {track.discogs.uri && (
